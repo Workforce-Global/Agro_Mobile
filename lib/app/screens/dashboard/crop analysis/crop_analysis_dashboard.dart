@@ -1,6 +1,9 @@
+import 'package:agro_sav/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'widgets/dashboard_header.dart';
 import 'widgets/image_upload_section.dart';
@@ -22,7 +25,7 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   File? _selectedImage;
-  String _selectedModel = 'MobileNet';
+  String _selectedModel = 'efficientnet';
   bool _isAnalyzing = false;
   final ImagePicker _picker = ImagePicker();
 
@@ -55,16 +58,60 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
     if (_selectedImage == null) return;
 
     setState(() => _isAnalyzing = true);
-    await Future.delayed(const Duration(seconds: 3));
+
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/'),
+      );
+      request.fields['model_name'] = _selectedModel;
+      request.files.add(await http.MultipartFile.fromPath('file', _selectedImage!.path));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final respStr = await response.stream.bytesToString();
+        final data = jsonDecode(respStr);
+
+        final label = data['result']['label'];
+        final confidence = (data['result']['confidence'] as double) * 100;
+        final modelUsed = data['model_used'];
+
+        // Save to Firestore
+        await FirestoreService().saveAnalysisResult({
+          'label': label,
+          'confidence': confidence,
+          'model_used': modelUsed,
+          'timestamp': DateTime.now(),
+        });
+
+        // Show dialog
+        _showAnalysisResults(label, confidence);
+      } else {
+        _showError('API error: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showError('Error: $e');
+    }
+
     setState(() => _isAnalyzing = false);
-    _showAnalysisResults();
   }
 
-  void _showAnalysisResults() {
+  void _showAnalysisResults(String label, double confidence) {
     showDialog(
       context: context,
-      builder: (context) => AnalysisResultsDialog(),
+      builder: (context) => AnalysisResultsDialog(
+        label: label,
+        confidence: confidence,
+      ),
     );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    ));
   }
 
   @override
@@ -79,10 +126,9 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
             child: Sidebar(
               isCollapsed: false,
               currentPage: 'Analysis',
-              onToggle: () {}, // Not needed for mobile drawer
+              onToggle: () {},
               onPageChanged: (page) {
-                Navigator.pop(context); // Close drawer when item is selected
-                // Handle page navigation here if needed
+                Navigator.pop(context);
               },
             ),
           ),
@@ -104,11 +150,11 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
           actions: [
             IconButton(
               icon: const Icon(Icons.light_mode, color: Colors.black),
-              onPressed: () {}, // Theme toggle
+              onPressed: () {},
             ),
             IconButton(
               icon: const Icon(Icons.person, color: Colors.black),
-              onPressed: () {}, // Profile
+              onPressed: () {},
             ),
           ],
         ),

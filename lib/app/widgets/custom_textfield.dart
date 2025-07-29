@@ -4,19 +4,21 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;
   final IconData icon;
-  final TextInputType keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
+  final TextInputType keyboardType;
+  final String? Function(String?)? validator; // ✅ Add this line
 
   const CustomTextField({
-    super.key,
+    Key? key,
     required this.controller,
     required this.labelText,
     required this.icon,
-    this.keyboardType = TextInputType.text,
     this.obscureText = false,
     this.suffixIcon,
-  });
+    this.keyboardType = TextInputType.text,
+    this.validator, // ✅ Add this
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +26,14 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      validator: (value) =>
-          (value == null || value.isEmpty) ? 'This field is required' : null,
+      validator: validator, // ✅ Use it here
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(icon),
         suffixIcon: suffixIcon,
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }

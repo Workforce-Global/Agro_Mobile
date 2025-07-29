@@ -1,3 +1,4 @@
+import 'package:agro_sav/app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,11 +8,11 @@ import 'app/bindings/auth_binding.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  runApp(const AgroApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AgroApp extends StatelessWidget {
+  const AgroApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +20,8 @@ class MyApp extends StatelessWidget {
       title: 'AgroSaviour',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       initialRoute: AppRoutes.splash,
       getPages: AppRoutes.routes,
       initialBinding: AuthBinding(),

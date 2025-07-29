@@ -1,16 +1,26 @@
 # agro_sav
+    AgroSaviour - Crop Disease Analysis App
+AgroSaviour is a Flutter-based mobile application programmed to farmers and agricultural experts analyze crpo images using AI models.
 
-A new Flutter project.
+## Features
 
-## Getting Started
+- Upload crop images from **camera** or **gallery**
+- Choose between multiple machine learning models (e.g., EfficientNet)
+- Real-time prediction via **backend API**
+- Displays prediction **label** and **confidence percentage**
+- Stores results securely in **Firestore**
+- Firebase Authentication support (Google/Email)
+- Simple and responsive UI with theme support
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+## API INtegration
+- Endpoint:
+  `https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Method: 'POST'
+- Body: 
+    -model_name:
+    -file: Multipart file
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Authentication
+- Firebase Authentication: Email/password and Google Sign-In

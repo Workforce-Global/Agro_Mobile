@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // ✅ Correct: Listen to auth state changes
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user == null) {
-        Get.offAllNamed('/login');
+        Get.offAllNamed('/onboarding');
       } else {
         final displayName = user.displayName ?? '';
         final names = displayName.split(' ');

@@ -59,19 +59,31 @@ class AuthController extends GetxController {
   }
 
   // ✅ Sign up
-  Future<void> signUp(String email, String password, String firstName, String lastName) async {
-    try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+  Future<void> signUp({
+  required String email,
+  required String password,
+  required String firstName,
+  required String lastName,
+}) async {
+  try {
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      // Save display name for future use
-      await userCredential.user?.updateDisplayName('$firstName $lastName');
-    } catch (e) {
-      Get.snackbar('Signup Failed', e.toString());
-    }
+    // Save display name for future use
+    await userCredential.user?.updateDisplayName('$firstName $lastName');
+
+    // Redirect to welcome screen with name args
+    Get.offAllNamed('/welcome', arguments: {
+      'firstName': firstName,
+      'lastName': lastName,
+    });
+  } catch (e) {
+    Get.snackbar('Signup Failed', e.toString());
   }
+}
+
 
   // ✅ Google sign in
   Future<void> signInWithGoogle() async {

@@ -87,19 +87,33 @@ class AuthController extends GetxController {
 
   // ✅ Google sign in
   Future<void> signInWithGoogle() async {
-    try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+  try {
+    final googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return;
 
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
 
-      await _auth.signInWithCredential(credential);
-    } catch (e) {
-      Get.snackbar('Google Sign-In Failed', e.toString());
-    }
+    // Sign in with Firebase
+    final userCredential = await _auth.signInWithCredential(credential);
+
+    // Optionally save user info to Firestore or SharedPreferences
+    final displayName = userCredential.user?.displayName ?? '';
+    final nameParts = displayName.split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts[0] : '';
+    final lastName = nameParts.length > 1 ? nameParts[1] : '';
+
+    // Example: Store in SharedPreferences if needed
+    // await SharedPrefsService.saveName(firstName, lastName);
+
+    // Navigate to WelcomeScreen
+    Get.offAllNamed('/welcome');
+  } catch (e) {
+    Get.snackbar('Google Sign-In Failed', e.toString());
   }
+}
+
 }

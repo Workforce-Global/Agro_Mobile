@@ -15,36 +15,28 @@ class LoginScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark 
-          ? const Color(0xFF0A0A0B) 
-          : const Color(0xFFFAFAFA),
+      backgroundColor: isDark ? const Color(0xFF0A0A0B) : const Color(0xFFFAFAFA),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Container(
-            height: MediaQuery.of(context).size.height - 
-                   MediaQuery.of(context).padding.top,
+            height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
-                // Header Section
+                // Header
                 Expanded(
                   flex: 2,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      
-                      // Logo or App Icon
                       Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF4CAF50),
-                              const Color(0xFF66BB6A),
-                            ],
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -57,35 +49,23 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.eco,
-                          color: Colors.white,
-                          size: 48,
-                        ),
+                        child: const Icon(Icons.eco, color: Colors.white, size: 48),
                       ),
-                      
                       const SizedBox(height: 32),
-                      
-                      // Welcome Text
                       Text(
                         "Welcome Back",
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.white : Colors.black87,
-                          letterSpacing: -0.5,
                         ),
                       ),
-                      
                       const SizedBox(height: 12),
-                      
                       Text(
                         "Sign in to continue to AgroSav",
                         style: TextStyle(
                           fontSize: 16,
-                          color: isDark 
-                              ? Colors.white.withOpacity(0.7)
-                              : Colors.black54,
+                          color: isDark ? Colors.white.withOpacity(0.7) : Colors.black54,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -108,9 +88,7 @@ class LoginScreen extends StatelessWidget {
                           keyboardType: TextInputType.emailAddress,
                           isDark: isDark,
                         ),
-                        
                         const SizedBox(height: 20),
-                        
                         Obx(() => _buildModernTextField(
                               labelText: "Password",
                               controller: authController.passwordController,
@@ -122,51 +100,35 @@ class LoginScreen extends StatelessWidget {
                                   authController.obscurePassword.value
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
-                                  color: isDark 
-                                      ? Colors.white.withOpacity(0.7)
-                                      : Colors.black54,
+                                  color: isDark ? Colors.white.withOpacity(0.7) : Colors.black54,
                                 ),
                                 onPressed: authController.togglePasswordVisibility,
                               ),
                             )),
-                        
-                        // Forgot Password Link
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              // Add forgot password functionality
-                              // Get.toNamed('/forgot-password');
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 0, 
-                                vertical: 8,
-                              ),
-                            ),
-                            child: Text(
+                            onPressed: () {},
+                            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8)),
+                            child: const Text(
                               "Forgot Password?",
                               style: TextStyle(
-                                color: const Color(0xFF4CAF50),
+                                color: Color(0xFF4CAF50),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
                               ),
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 32),
-                        
+
                         // Login Button
                         Container(
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF4CAF50),
-                                const Color(0xFF66BB6A),
-                              ],
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
@@ -195,63 +157,42 @@ class LoginScreen extends StatelessWidget {
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 24),
-                        
-                        // Divider with text
+
+                        // Divider
                         Row(
                           children: [
-                            Expanded(
-                              child: Divider(
-                                color: isDark 
-                                    ? Colors.white.withOpacity(0.1)
-                                    : Colors.black.withOpacity(0.1),
-                              ),
-                            ),
+                            Expanded(child: Divider(color: isDark ? Colors.white10 : Colors.black12)),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 "or continue with",
                                 style: TextStyle(
-                                  color: isDark 
-                                      ? Colors.white.withOpacity(0.5)
-                                      : Colors.black38,
+                                  color: isDark ? Colors.white54 : Colors.black38,
                                   fontSize: 14,
                                 ),
                               ),
                             ),
-                            Expanded(
-                              child: Divider(
-                                color: isDark 
-                                    ? Colors.white.withOpacity(0.1)
-                                    : Colors.black.withOpacity(0.1),
-                              ),
-                            ),
+                            Expanded(child: Divider(color: isDark ? Colors.white10 : Colors.black12)),
                           ],
                         ),
-                        
                         const SizedBox(height: 24),
-                        
-                        // Google Sign In Button
+
+                        // Google Sign-In Button with local asset
                         Container(
                           width: double.infinity,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: isDark 
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.white,
+                            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isDark 
-                                  ? Colors.white.withOpacity(0.1)
-                                  : Colors.black.withOpacity(0.1),
+                              color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1),
                             ),
                             boxShadow: isDark ? null : [
                               BoxShadow(
@@ -271,7 +212,6 @@ class LoginScreen extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  // Google Icon
                                   Container(
                                     width: 24,
                                     height: 24,
@@ -288,37 +228,11 @@ class LoginScreen extends StatelessWidget {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(4),
-                                      child: Image.network(
-                                        'https://cdn.cdnlogo.com/logos/g/35/google-icon.svg',
+                                      child: Image.asset(
+                                        'assets/images/google_logo.png',
                                         width: 20,
                                         height: 20,
                                         fit: BoxFit.contain,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  Colors.blue.shade600,
-                                                  Colors.red.shade500,
-                                                  Colors.yellow.shade600,
-                                                  Colors.green.shade600,
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: const Center(
-                                              child: Text(
-                                                'G',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
                                       ),
                                     ),
                                   ),
@@ -341,35 +255,27 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Footer Section
+                // Footer
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Sign up link
                       TextButton(
                         onPressed: () => Get.toNamed('/signup'),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24, 
-                            vertical: 12,
-                          ),
-                        ),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                         child: RichText(
                           text: TextSpan(
                             text: "Don't have an account? ",
                             style: TextStyle(
-                              color: isDark 
-                                  ? Colors.white.withOpacity(0.7)
-                                  : Colors.black54,
+                              color: isDark ? Colors.white70 : Colors.black54,
                               fontSize: 16,
                             ),
-                            children: [
+                            children: const [
                               TextSpan(
                                 text: "Sign Up",
                                 style: TextStyle(
-                                  color: const Color(0xFF4CAF50),
+                                  color: Color(0xFF4CAF50),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -400,14 +306,10 @@ class LoginScreen extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark 
-            ? Colors.white.withOpacity(0.05)
-            : Colors.white,
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark 
-              ? Colors.white.withOpacity(0.1)
-              : Colors.black.withOpacity(0.1),
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1),
         ),
         boxShadow: isDark ? null : [
           BoxShadow(
@@ -422,59 +324,29 @@ class LoginScreen extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
-          fontSize: 16,
-        ),
+        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
         decoration: InputDecoration(
           labelText: labelText,
           labelStyle: TextStyle(
-            color: isDark 
-                ? Colors.white.withOpacity(0.7)
-                : Colors.black54,
+            color: isDark ? Colors.white70 : Colors.black54,
             fontSize: 16,
           ),
-          prefixIcon: Icon(
-            icon,
-            color: isDark 
-                ? Colors.white.withOpacity(0.7)
-                : Colors.black54,
-            size: 20,
-          ),
+          prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black54),
           suffixIcon: suffixIcon,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Color(0xFF4CAF50),
-              width: 2,
-            ),
+            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Colors.red,
-              width: 1,
-            ),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Colors.red,
-              width: 2,
-            ),
+            borderSide: const BorderSide(color: Colors.red, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );

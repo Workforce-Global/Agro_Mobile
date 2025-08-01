@@ -333,6 +333,7 @@ class SignUpScreen extends StatelessWidget {
                                   Container(
                                     width: 24,
                                     height: 24,
+                                    padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(4),
@@ -344,40 +345,11 @@ class SignUpScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: Image.network(
-                                        'https://cdn.cdnlogo.com/logos/g/35/google-icon.svg',
-                                        width: 20,
-                                        height: 20,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  Colors.blue.shade600,
-                                                  Colors.red.shade500,
-                                                  Colors.yellow.shade600,
-                                                  Colors.green.shade600,
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: const Center(
-                                              child: Text(
-                                                'G',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                    child: Image.asset(
+                                      'assets/images/google_logo.png',
+                                      width: 20,
+                                      height: 20,
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                   const SizedBox(width: 12),

@@ -97,7 +97,12 @@ class Sidebar extends StatelessWidget {
                   title: 'History',
                   isCollapsed: isCollapsed,
                   isSelected: currentPage == 'History',
-                  onTap: () => onPageChanged('History'),
+                  onTap: (){
+                    // Use consistent navigation approach
+                    Navigator.pop(context); // Close the sidebar if open
+                    // If you need to navigate to a different route, you can do:
+                    Get.toNamed('/history');
+                  }
                 ),
                 SidebarItem(
                   icon: Icons.settings,

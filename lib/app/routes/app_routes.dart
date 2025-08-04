@@ -1,6 +1,7 @@
 // app_routes.dart
 // TODO: Define app routes
 import 'package:agro_sav/app/screens/dashboard/crop%20analysis/crop_analysis_dashboard.dart';
+import 'package:agro_sav/app/screens/dashboard/history/history_screen.dart';
 import 'package:agro_sav/app/screens/dashboard/mobile%20dash/mobile_dash_screen.dart';
 import 'package:agro_sav/app/screens/permissions/permissions_screen.dart';
 import 'package:get/get.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const mobiledash = '/mobiledash';
   static const permissions = '/permissions';
   static const cropAnalysis = '/crop-analysis';
+  static const history = '/history';
 
   static final routes = [
     GetPage(name: splash, page: () => SplashScreen()),
@@ -31,5 +33,6 @@ class AppRoutes {
     GetPage(name: mobiledash, page: () => MobileDashboardScreen()),
         GetPage(name: permissions, page: () => const PermissionScreen()),
         GetPage(name: cropAnalysis, page: () => const CropAnalysisDashboard()),
+    GetPage(name: history, page: () => const HistoryScreen()),
       ];
     }

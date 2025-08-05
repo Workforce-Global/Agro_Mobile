@@ -6,7 +6,7 @@ import 'widgets/crop_distribution_chart.dart';
 import 'widgets/recent_scans_list.dart';
 
 class MobileDashboardScreen extends StatelessWidget {
-  const MobileDashboardScreen({Key? key}) : super(key: key);
+  const MobileDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -73,25 +73,19 @@ class MobileDashboardScreen extends StatelessWidget {
           children: [
             // Top Stats Cards (Mobile Layout - 2x2 Grid)
             const MobileStatsCards(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Disease Chart
-            SizedBox(
-              height: 350,
-              child: const DiseaseChart(),
-            ),
-            
+            SizedBox(height: 350, child: const DiseaseChart()),
+
             const SizedBox(height: 16),
-            
+
             // Crop Distribution Chart
-            SizedBox(
-              height: 350,
-              child: const CropDistributionChart(),
-            ),
-            
+            SizedBox(height: 350, child: const CropDistributionChart()),
+
             const SizedBox(height: 16),
-            
+
             // Recent Scans
             const RecentScansList(),
           ],
@@ -102,7 +96,7 @@ class MobileDashboardScreen extends StatelessWidget {
 }
 
 class MobileStatsCards extends StatelessWidget {
-  const MobileStatsCards({Key? key}) : super(key: key);
+  const MobileStatsCards({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -218,17 +212,13 @@ class StatsCard extends StatelessWidget {
                   color: iconColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  size: 14,
-                  color: iconColor,
-                ),
+                child: Icon(icon, size: 14, color: iconColor),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
             value,
             style: const TextStyle(
@@ -237,27 +227,21 @@ class StatsCard extends StatelessWidget {
               color: Color(0xFF1A1A1A),
             ),
           ),
-          
+
           const SizedBox(height: 4),
-          
+
           if (change != null)
             Text(
               change!,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          
+
           if (subtitle != null)
             Text(
               subtitle!,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

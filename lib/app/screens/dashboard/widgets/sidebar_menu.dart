@@ -23,11 +23,7 @@ class Sidebar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Color(0xFF2E7D32), // Dark green
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(2, 0),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2, 0)),
         ],
       ),
       child: Column(
@@ -38,11 +34,7 @@ class Sidebar extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(
-                  Icons.eco,
-                  color: Colors.white,
-                  size: 28,
-                ),
+                const Icon(Icons.eco, color: Colors.white, size: 28),
                 if (!isCollapsed) ...[
                   const SizedBox(width: 12),
                   const Expanded(
@@ -60,7 +52,7 @@ class Sidebar extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white24, height: 1),
-          
+
           // Menu Items
           Expanded(
             child: ListView(
@@ -71,7 +63,23 @@ class Sidebar extends StatelessWidget {
                   title: 'Dashboard',
                   isCollapsed: isCollapsed,
                   isSelected: currentPage == 'Dashboard',
-                  onTap: () => onPageChanged('Dashboard'),
+                  onTap: () {
+                    onPageChanged('Dashboard');
+
+                    Get.toNamed('/dashboard');
+                  },
+                ),
+                SidebarItem(
+                  icon: Icons.camera_alt,
+                  title: 'Camera Stream',
+                  isCollapsed: isCollapsed,
+                  isSelected: currentPage == 'Camera Stream',
+                  onTap: () {
+                    // Use consistent navigation approach
+                    onPageChanged('Camera Stream');
+                    // If you need to navigate to a different route, you can do:
+                    Get.toNamed('/camera-stream');
+                  },
                 ),
                 SidebarItem(
                   icon: Icons.analytics,
@@ -97,12 +105,12 @@ class Sidebar extends StatelessWidget {
                   title: 'History',
                   isCollapsed: isCollapsed,
                   isSelected: currentPage == 'History',
-                  onTap: (){
+                  onTap: () {
                     // Use consistent navigation approach
                     Navigator.pop(context); // Close the sidebar if open
                     // If you need to navigate to a different route, you can do:
                     Get.toNamed('/history');
-                  }
+                  },
                 ),
                 SidebarItem(
                   icon: Icons.settings,
@@ -114,8 +122,6 @@ class Sidebar extends StatelessWidget {
               ],
             ),
           ),
-          
-
         ],
       ),
     );
@@ -148,19 +154,12 @@ class SidebarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
+        leading: Icon(icon, color: Colors.white, size: 24),
         title: isCollapsed
             ? null
             : Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: isCollapsed ? 18 : 16,

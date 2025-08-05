@@ -10,7 +10,7 @@ import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/welcome/welcome_screen.dart';
-
+import '../screens/dashboard/stream/camera_stream_screen.dart';
 
 class AppRoutes {
   static const splash = '/';
@@ -23,6 +23,7 @@ class AppRoutes {
   static const permissions = '/permissions';
   static const cropAnalysis = '/crop-analysis';
   static const history = '/history';
+  static const cameraStream = '/camera-stream';
 
   static final routes = [
     GetPage(name: splash, page: () => SplashScreen()),
@@ -31,8 +32,10 @@ class AppRoutes {
     GetPage(name: login, page: () => LoginScreen()),
     GetPage(name: welcome, page: () => WelcomeScreen()),
     GetPage(name: mobiledash, page: () => MobileDashboardScreen()),
-        GetPage(name: permissions, page: () => const PermissionScreen()),
-        GetPage(name: cropAnalysis, page: () => const CropAnalysisDashboard()),
+    GetPage(name: permissions, page: () => const PermissionScreen()),
+    GetPage(name: cropAnalysis, page: () => const CropAnalysisDashboard()),
     GetPage(name: history, page: () => const HistoryScreen()),
-      ];
-    }
+    GetPage(name: cameraStream, page: () => CameraStreamScreen()),
+    GetPage(name: dashboard, page: () => const MobileDashboardScreen()),
+  ];
+}

@@ -1,5 +1,6 @@
 // dashboard/mobile_dash/mobile_dashboard.dart
 import 'package:agro_sav/app/screens/dashboard/crop%20analysis/crop_analysis_dashboard.dart';
+import 'package:agro_sav/app/screens/dashboard/stream/camera_stream_screen.dart';
 import 'package:agro_sav/app/screens/dashboard/widgets/sidebar_menu.dart';
 import 'package:flutter/material.dart';
 
@@ -34,9 +35,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
             },
           ),
           // Main Content Area
-          Expanded(
-            child: _buildCurrentPage(),
-          ),
+          Expanded(child: _buildCurrentPage()),
         ],
       ),
     );
@@ -53,6 +52,8 @@ class _MobileDashboardState extends State<MobileDashboard> {
         return _buildHistoryContent();
       case 'Settings':
         return _buildSettingsContent();
+      case 'Camera Stream':
+        return CameraStreamScreen();
       default:
         return _buildDashboardContent();
     }
@@ -69,11 +70,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.dashboard,
-                  size: 80,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.dashboard, size: 80, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
                   'Welcome to AgroSaviour Mobile Dashboard',
@@ -87,10 +84,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                 const SizedBox(height: 8),
                 Text(
                   'Navigate to Analysis to start crop image analysis',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -195,11 +189,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
+            Icon(icon, size: 32, color: color),
             const SizedBox(height: 8),
             Text(
               title,
@@ -213,10 +203,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
             const SizedBox(height: 4),
             Text(
               description,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -256,8 +243,13 @@ class _MobileDashboardState extends State<MobileDashboard> {
                             child: Icon(Icons.eco, color: Colors.white),
                           ),
                           title: Text('Analysis ${index + 1}'),
-                          subtitle: Text('${DateTime.now().subtract(Duration(days: index)).toString().split(' ')[0]} - Healthy crop detected'),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          subtitle: Text(
+                            '${DateTime.now().subtract(Duration(days: index)).toString().split(' ')[0]} - Healthy crop detected',
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
                           onTap: () {
                             // Show analysis details
                           },
@@ -300,20 +292,14 @@ class _MobileDashboardState extends State<MobileDashboard> {
                         leading: const Icon(Icons.notifications),
                         title: const Text('Notifications'),
                         subtitle: const Text('Manage notification preferences'),
-                        trailing: Switch(
-                          value: true,
-                          onChanged: (value) {},
-                        ),
+                        trailing: Switch(value: true, onChanged: (value) {}),
                       ),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.dark_mode),
                         title: const Text('Dark Mode'),
                         subtitle: const Text('Switch to dark theme'),
-                        trailing: Switch(
-                          value: false,
-                          onChanged: (value) {},
-                        ),
+                        trailing: Switch(value: false, onChanged: (value) {}),
                       ),
                       const Divider(height: 1),
                       const ListTile(
@@ -347,11 +333,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -367,20 +349,11 @@ class _MobileDashboardState extends State<MobileDashboard> {
           const Spacer(),
           Text(
             _currentPage,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.light_mode),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.light_mode), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.person), onPressed: () {}),
         ],
       ),
     );

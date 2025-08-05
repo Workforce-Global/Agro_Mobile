@@ -38,14 +38,18 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
       builder: (context) => ImagePickerBottomSheet(
         onCameraSelected: () async {
           Navigator.pop(context);
-          final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+          final XFile? image = await _picker.pickImage(
+            source: ImageSource.camera,
+          );
           if (image != null) {
             setState(() => _selectedImage = File(image.path));
           }
         },
         onGallerySelected: () async {
           Navigator.pop(context);
-          final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+          final XFile? image = await _picker.pickImage(
+            source: ImageSource.gallery,
+          );
           if (image != null) {
             setState(() => _selectedImage = File(image.path));
           }
@@ -62,10 +66,14 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/'),
+        Uri.parse(
+          'https://agrosaviour-backend-947103695812.europe-west1.run.app/predict/',
+        ),
       );
       request.fields['model_name'] = _selectedModel;
-      request.files.add(await http.MultipartFile.fromPath('file', _selectedImage!.path));
+      request.files.add(
+        await http.MultipartFile.fromPath('file', _selectedImage!.path),
+      );
 
       final response = await request.send();
 
@@ -100,18 +108,15 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
   void _showAnalysisResults(String label, double confidence) {
     showDialog(
       context: context,
-      builder: (context) => AnalysisResultsDialog(
-        label: label,
-        confidence: confidence,
-      ),
+      builder: (context) =>
+          AnalysisResultsDialog(label: label, confidence: confidence),
     );
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
@@ -184,9 +189,11 @@ class _CropAnalysisDashboardState extends State<CropAnalysisDashboard> {
                 onAnalyze: _analyzeImage,
                 isEnabled: _selectedImage != null,
               ),
+              /*
               const SizedBox(height: 24),
               if (_isAnalyzing || _selectedImage != null)
                 ResultsSection(isAnalyzing: _isAnalyzing),
+              */
             ],
           ),
         ),

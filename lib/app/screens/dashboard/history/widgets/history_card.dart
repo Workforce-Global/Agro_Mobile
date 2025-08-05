@@ -19,7 +19,9 @@ class HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat.yMMMd().add_jm().format(timestamp.toDate());
+    final formattedDate = DateFormat.yMMMd().add_jm().format(
+      timestamp.toDate(),
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -28,7 +30,7 @@ class HistoryCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Confidence: ${(confidence * 100).toStringAsFixed(2)}%'),
+            Text('Confidence: ${(confidence).toStringAsFixed(2)}%'),
             Text('Analyzed on: $formattedDate'),
           ],
         ),

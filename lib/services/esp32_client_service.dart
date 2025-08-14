@@ -1,22 +1,62 @@
-// esp32_client_service.dart
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 class ESP32ClientService {
   static const String defaultIP = '192.168.1.100'; // Change to your ESP32 IP
-  static const int streamPort = 81;
-  static const int controlPort = 80;
+  static const int defaultStreamPort = 81;
+  static const int defaultControlPort = 80;
+  static const String defaultStreamEndpoint = '/stream';
+  static const String defaultCaptureEndpoint = '/capture';
+  static const String defaultMoveEndpoint = '/move';
+  static const String defaultPositionEndpoint = '/position';
 
   String _esp32IP = defaultIP;
+  int _streamPort = defaultStreamPort;
+  int _controlPort = defaultControlPort;
+  String _streamEndpoint = defaultStreamEndpoint;
+  String _captureEndpoint = defaultCaptureEndpoint;
+  String _moveEndpoint = defaultMoveEndpoint;
+  String _positionEndpoint = defaultPositionEndpoint;
+
   StreamController<Uint8List>? _streamController;
   bool _isStreaming = false;
   http.Client? _httpClient;
 
   String get esp32IP => _esp32IP;
+  int get streamPort => _streamPort;
+  int get controlPort => _controlPort;
+  String get streamEndpoint => _streamEndpoint;
+  String get captureEndpoint => _captureEndpoint;
+  String get moveEndpoint => _moveEndpoint;
+  String get positionEndpoint => _positionEndpoint;
 
   void setESP32IP(String ip) {
     _esp32IP = ip;
+  }
+
+  void setStreamPort(int port) {
+    _streamPort = port;
+  }
+
+  void setControlPort(int port) {
+    _controlPort = port;
+  }
+
+  void setStreamEndpoint(String endpoint) {
+    _streamEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
+  }
+
+  void setCaptureEndpoint(String endpoint) {
+    _captureEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
+  }
+
+  void setMoveEndpoint(String endpoint) {
+    _moveEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
+  }
+
+  void setPositionEndpoint(String endpoint) {
+    _positionEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
   }
 
   // Start camera stream
@@ -35,7 +75,7 @@ class ESP32ClientService {
 
   void _startStreamingProcess() async {
     try {
-      final streamUrl = 'http://$_esp32IP:$streamPort/stream';
+      final streamUrl = 'http://$_esp32IP:$_streamPort$_streamEndpoint';
       final request = http.Request('GET', Uri.parse(streamUrl));
       final response = await _httpClient!.send(request);
 
@@ -103,7 +143,7 @@ class ESP32ClientService {
   // Capture current frame (this would be called when capture button is pressed)
   Future<Uint8List?> captureImage() async {
     try {
-      final captureUrl = 'http://$_esp32IP/capture';
+      final captureUrl = 'http://$_esp32IP:$_controlPort$_captureEndpoint';
       final response = await http.get(Uri.parse(captureUrl));
 
       if (response.statusCode == 200) {
@@ -118,7 +158,7 @@ class ESP32ClientService {
   // Control robotic arm movement
   Future<bool> moveArm(String direction) async {
     try {
-      final controlUrl = 'http://$_esp32IP:$controlPort/move';
+      final controlUrl = 'http://$_esp32IP:$_controlPort$_moveEndpoint';
       final response = await http.post(
         Uri.parse(controlUrl),
         headers: {'Content-Type': 'application/json'},
@@ -135,7 +175,7 @@ class ESP32ClientService {
   // Send continuous movement commands (for joystick)
   Future<bool> setArmPosition(double position) async {
     try {
-      final controlUrl = 'http://$_esp32IP:$controlPort/position';
+      final controlUrl = 'http://$_esp32IP:$_controlPort$_positionEndpoint';
       final response = await http.post(
         Uri.parse(controlUrl),
         headers: {'Content-Type': 'application/json'},

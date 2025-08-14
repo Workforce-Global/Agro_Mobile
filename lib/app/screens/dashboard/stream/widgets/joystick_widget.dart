@@ -6,8 +6,11 @@ class JoystickWidget extends StatefulWidget {
   final Function(double) onMove;
   final double size;
 
-  const JoystickWidget({Key? key, required this.onMove, this.size = 100})
-    : super(key: key);
+  const JoystickWidget({
+    super.key,
+    required this.onMove,
+    this.size = 100,
+  });
 
   @override
   _JoystickWidgetState createState() => _JoystickWidgetState();
@@ -21,8 +24,7 @@ class _JoystickWidgetState extends State<JoystickWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: widget.size,
-      height:
-          widget.size * 0.6, // Make it more rectangular for left-right movement
+      height: widget.size * 0.6, // Make it more rectangular for left-right movement
       child: GestureDetector(
         onPanStart: _onPanStart,
         onPanUpdate: _onPanUpdate,
@@ -73,7 +75,10 @@ class JoystickPainter extends CustomPainter {
   final double knobPosition;
   final bool isDragging;
 
-  JoystickPainter({required this.knobPosition, required this.isDragging});
+  JoystickPainter({
+    required this.knobPosition,
+    required this.isDragging,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -88,11 +93,7 @@ class JoystickPainter extends CustomPainter {
     paint.strokeWidth = 4;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size.width - 20,
-          height: size.height - 20,
-        ),
+        Rect.fromCenter(center: center, width: size.width - 20, height: size.height - 20),
         Radius.circular(radius),
       ),
       paint,

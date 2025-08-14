@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/agro_sav.iml" filepath="$PROJECT_DIR$/agro_sav.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/agro_sav_android.iml" filepath="$PROJECT_DIR$/android/agro_sav_android.iml" />
     </modules>
   </component>
 </project>

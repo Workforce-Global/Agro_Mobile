@@ -4,12 +4,17 @@ import 'package:flutter/services.dart';
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:agro_sav/services/esp32_client_service.dart';
 import 'package:agro_sav/services/crop_analysis_service.dart';
 import 'package:agro_sav/services/firestore_service.dart';
-import './widgets/joystick_widget.dart';
+import './widgets/camera_overlay_widgets.dart';
+import './widgets/camera_stream_widget.dart';
+import './widgets/settings_dialog.dart';
 
 class CameraStreamScreen extends StatefulWidget {
+  const CameraStreamScreen({super.key});
+
   @override
   _CameraStreamScreenState createState() => _CameraStreamScreenState();
 }
@@ -23,6 +28,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   bool _isStreaming = false;
   bool _isCapturing = false;
   bool _isAnalyzing = false;
+  bool _showCaptureFlash = false;
 
   String _esp32IP = ESP32ClientService.defaultIP;
   int _streamPort = ESP32ClientService.defaultStreamPort;
@@ -44,11 +50,18 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   void initState() {
     super.initState();
     _initializeControllers();
-    // Force landscape orientation
+    _requestPermissions();
     SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+  }
+
+  Future<void> _requestPermissions() async {
+    await Permission.storage.request();
+    await Permission.photos.request();
   }
 
   void _initializeControllers() {
@@ -64,13 +77,6 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   @override
   void dispose() {
     _esp32Service.dispose();
-    // Reset orientation when leaving
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
     super.dispose();
   }
 
@@ -104,21 +110,22 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     }
   }
 
-  Future<void> _captureImage() async {
+  Future<void> _captureCurrentFrame() async {
     if (_isCapturing || !_isStreaming) return;
 
     setState(() {
       _isCapturing = true;
       _isAnalyzing = false;
+      _showCaptureFlash = true;
     });
 
     try {
-      final imageData = await _esp32Service.captureImage();
+      final imageData = _esp32Service.captureCurrentFrame();
+
       if (imageData != null) {
-        await _saveImage(imageData);
+        await _saveImageToGallery(imageData);
         _showCaptureSuccess();
 
-        // Start analysis
         setState(() {
           _isAnalyzing = true;
         });
@@ -136,14 +143,23 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
           _showAnalysisError();
         }
       } else {
-        _showCaptureError();
+        _showCaptureError('No frame available to capture');
       }
     } catch (e) {
-      _showCaptureError();
+      print('Capture error: $e');
+      _showCaptureError('Failed to capture frame');
     } finally {
       setState(() {
         _isCapturing = false;
         _isAnalyzing = false;
+      });
+
+      Future.delayed(Duration(milliseconds: 200), () {
+        if (mounted) {
+          setState(() {
+            _showCaptureFlash = false;
+          });
+        }
       });
     }
   }
@@ -159,94 +175,8 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   void _showAnalysisResult(CropAnalysisResponse result) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.analytics, color: Colors.green),
-            SizedBox(width: 8),
-            Text('Analysis Result'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildResultRow('Model Used:', result.modelUsed),
-            SizedBox(height: 8),
-            _buildResultRow('Detected:', result.label),
-            SizedBox(height: 8),
-            _buildResultRow('Confidence:', '${(result.confidence * 100).toStringAsFixed(1)}%'),
-            SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _getConfidenceColor(result.confidence).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _getConfidenceColor(result.confidence)),
-              ),
-              child: Text(
-                _getConfidenceMessage(result.confidence),
-                style: TextStyle(
-                  color: _getConfidenceColor(result.confidence),
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // You could add functionality to view all results here
-            },
-            child: Text('View History'),
-          ),
-        ],
-      ),
+      builder: (context) => AnalysisResultDialog(result: result),
     );
-  }
-
-  Widget _buildResultRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[600],
-          ),
-        ),
-        SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getConfidenceColor(double confidence) {
-    if (confidence >= 0.9) return Colors.green;
-    if (confidence >= 0.7) return Colors.orange;
-    return Colors.red;
-  }
-
-  String _getConfidenceMessage(double confidence) {
-    if (confidence >= 0.9) return 'High Confidence Detection';
-    if (confidence >= 0.7) return 'Moderate Confidence Detection';
-    return 'Low Confidence Detection';
   }
 
   void _showAnalysisError() {
@@ -259,6 +189,40 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     );
   }
 
+  // NEW: Save image to gallery (visible to phone's gallery app)
+  Future<void> _saveImageToGallery(Uint8List imageData) async {
+    try {
+      // For Android 10+ (API 29+), save to Pictures directory
+      String? externalStoragePath;
+
+      if (Platform.isAndroid) {
+        // Try to get the Pictures directory
+        final directory = Directory('/storage/emulated/0/Pictures/AgroSav');
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        externalStoragePath = directory.path;
+      } else if (Platform.isIOS) {
+        // For iOS, save to documents directory
+        final directory = await getApplicationDocumentsDirectory();
+        externalStoragePath = directory.path;
+      }
+
+      if (externalStoragePath != null) {
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final fileName = 'crop_analysis_$timestamp.jpg';
+        final file = File('$externalStoragePath/$fileName');
+        await file.writeAsBytes(imageData);
+
+        print('Image saved to: ${file.path}');
+      }
+    } catch (e) {
+      print('Error saving image to gallery: $e');
+      // Fallback to app documents directory
+      await _saveImage(imageData);
+    }
+  }
+
   Future<void> _saveImage(Uint8List imageData) async {
     final directory = await getApplicationDocumentsDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -269,17 +233,31 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   void _showCaptureSuccess() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Image captured successfully!'),
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(child: Text('Frame captured & saved to gallery!')),
+          ],
+        ),
         backgroundColor: Colors.green,
         duration: Duration(seconds: 2),
       ),
     );
   }
 
-  void _showCaptureError() {
+  void _showCaptureError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Failed to capture image'),
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Colors.red,
         duration: Duration(seconds: 2),
       ),
@@ -287,115 +265,21 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   }
 
   void _onJoystickMove(double position) {
-    // Convert joystick position (-1.0 to 1.0) to arm movement
     _esp32Service.setArmPosition(position);
   }
 
   void _showSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('ESP32 Configuration'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _ipController,
-                decoration: InputDecoration(
-                  labelText: 'ESP32 IP Address',
-                  hintText: '192.168.1.100',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.wifi),
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _streamPortController,
-                      decoration: InputDecoration(
-                        labelText: 'Stream Port',
-                        hintText: '81',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.videocam),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _controlPortController,
-                      decoration: InputDecoration(
-                        labelText: 'Control Port',
-                        hintText: '80',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.settings_remote),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _streamEndpointController,
-                decoration: InputDecoration(
-                  labelText: 'Stream Endpoint',
-                  hintText: '/stream',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.router),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _captureEndpointController,
-                decoration: InputDecoration(
-                  labelText: 'Capture Endpoint',
-                  hintText: '/capture',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.camera_alt),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _moveEndpointController,
-                decoration: InputDecoration(
-                  labelText: 'Move Endpoint',
-                  hintText: '/move',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.open_with),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _positionEndpointController,
-                decoration: InputDecoration(
-                  labelText: 'Position Endpoint',
-                  hintText: '/position',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.my_location),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _saveSettings();
-              Navigator.pop(context);
-            },
-            child: Text('Save'),
-          ),
-        ],
+      builder: (context) => ESP32SettingsDialog(
+        ipController: _ipController,
+        streamPortController: _streamPortController,
+        controlPortController: _controlPortController,
+        streamEndpointController: _streamEndpointController,
+        captureEndpointController: _captureEndpointController,
+        moveEndpointController: _moveEndpointController,
+        positionEndpointController: _positionEndpointController,
+        onSave: _saveSettings,
       ),
     );
   }
@@ -432,214 +316,125 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Row(
-          children: [
-            // Camera Stream Section
-            Expanded(
-              flex: 3,
-              child: Container(
-                margin: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white24),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: _buildCameraStream(),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          return Stack(
+            children: [
+              // Full-screen camera stream
+              CameraStreamWidget(
+                cameraStream: _cameraStream,
+                isStreaming: _isStreaming,
+                showCaptureFlash: _showCaptureFlash,
+                isAnalyzing: _isAnalyzing,
               ),
-            ),
 
-            // Controls Section
-            Container(
-              width: 200,
-              padding: EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Connection Status
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _isStreaming ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _isStreaming ? Colors.green : Colors.red,
-                      ),
-                    ),
-                    child: Text(
-                      _isStreaming ? 'Connected' : 'Disconnected',
-                      style: TextStyle(
-                        color: _isStreaming ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  // Stream Controls
-                  Column(
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _isStreaming ? _stopStream : _startStream,
-                        icon: Icon(_isStreaming ? Icons.stop : Icons.play_arrow),
-                        label: Text(_isStreaming ? 'Stop Stream' : 'Start Stream'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isStreaming ? Colors.red : Colors.green,
-                          foregroundColor: Colors.white,
-                          minimumSize: Size(double.infinity, 45),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        onPressed: _showSettingsDialog,
-                        icon: Icon(Icons.settings),
-                        label: Text('Settings'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          minimumSize: Size(double.infinity, 45),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Capture Button
-                  ElevatedButton.icon(
-                    onPressed: _isStreaming && !_isCapturing ? _captureImage : null,
-                    icon: _isCapturing
-                        ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                        : Icon(Icons.camera_alt),
-                    label: Text(_isCapturing ? 'Capturing...' : 'Capture'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(double.infinity, 50),
-                    ),
-                  ),
-
-                  // Joystick for Arm Control
-                  Text(
-                    'Arm Control',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  JoystickWidget(
-                    onMove: _onJoystickMove,
-                    size: 120,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+              // Overlay controls based on orientation
+              if (orientation == Orientation.portrait)
+                _buildPortraitOverlays()
+              else
+                _buildLandscapeOverlays(),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCameraStream() {
-    if (!_isStreaming || _cameraStream == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.videocam_off,
-              size: 64,
-              color: Colors.white54,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Camera Stream Disconnected',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 18,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Press "Start Stream" to connect',
-              style: TextStyle(
-                color: Colors.white38,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return StreamBuilder<Uint8List>(
-      stream: _cameraStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Stream Error',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 18,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Check ESP32 connection',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (snapshot.hasData) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(
-              snapshot.data!,
-              fit: BoxFit.contain,
-              gaplessPlayback: true,
-            ),
-          );
-        }
-
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Connecting to camera...',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-            ],
+  Widget _buildPortraitOverlays() {
+    return Stack(
+      children: [
+        // Top controls
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 20,
+          right: 20,
+          child: TopControlsOverlay(
+            isStreaming: _isStreaming,
+            onSettingsPressed: _showSettingsDialog,
+            onStreamToggle: _isStreaming ? _stopStream : _startStream,
           ),
-        );
-      },
+        ),
+
+        // Compact arm control overlay (directly above shutter button)
+        Positioned(
+          bottom: 120, // Small space above shutter button
+          left: 0,
+          right: 0,
+          child: CompactArmControlOverlay(
+            onMove: _onJoystickMove,
+          ),
+        ),
+
+        // Bottom controls
+        Positioned(
+          bottom: MediaQuery.of(context).padding.bottom + 20,
+          left: 20,
+          right: 20,
+          child: BottomControlsOverlay(
+            isStreaming: _isStreaming,
+            isCapturing: _isCapturing,
+            isAnalyzing: _isAnalyzing,
+            onCapture: _captureCurrentFrame,
+            onGalleryPressed: () {
+              // Navigate to gallery
+            },
+            onSwitchPressed: () {
+              // Switch camera or other function
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeOverlays() {
+    return Stack(
+      children: [
+        // Top center controls
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: TopCenterControlsOverlay(
+              isStreaming: _isStreaming,
+              onSettingsPressed: _showSettingsDialog,
+              onStreamToggle: _isStreaming ? _stopStream : _startStream,
+            ),
+          ),
+        ),
+
+        // Right side controls
+        Positioned(
+          top: 0,
+          bottom: 0,
+          right: 20,
+          child: Center(
+            child: RightSideControlsOverlay(
+              isStreaming: _isStreaming,
+              isCapturing: _isCapturing,
+              isAnalyzing: _isAnalyzing,
+              onCapture: _captureCurrentFrame,
+              onGalleryPressed: () {
+                // Navigate to gallery
+              },
+              onSwitchPressed: () {
+                // Switch camera or other function
+              },
+            ),
+          ),
+        ),
+
+        // Full-width arm control overlay (bottom center)
+        Positioned(
+          bottom: MediaQuery.of(context).padding.bottom + 20,
+          left: 0,
+          right: 0,
+          child: FullWidthArmControlOverlay(
+            onMove: _onJoystickMove,
+          ),
+        ),
+      ],
     );
   }
 }

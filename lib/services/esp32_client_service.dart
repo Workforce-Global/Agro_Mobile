@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 class ESP32ClientService {
-  static const String defaultIP = '192.168.1.100'; // Change to your ESP32 IP
+  static const String defaultIP = '192.168.1.100';
   static const int defaultStreamPort = 81;
   static const int defaultControlPort = 80;
   static const String defaultStreamEndpoint = '/stream';
@@ -23,6 +23,10 @@ class ESP32ClientService {
   bool _isStreaming = false;
   http.Client? _httpClient;
 
+  // Add these for frame capture
+  Uint8List? _lastFrame;
+  final StreamController<Uint8List> _frameController = StreamController<Uint8List>.broadcast();
+
   String get esp32IP => _esp32IP;
   int get streamPort => _streamPort;
   int get controlPort => _controlPort;
@@ -30,6 +34,12 @@ class ESP32ClientService {
   String get captureEndpoint => _captureEndpoint;
   String get moveEndpoint => _moveEndpoint;
   String get positionEndpoint => _positionEndpoint;
+
+  // Getter for the last captured frame
+  Uint8List? get lastFrame => _lastFrame;
+
+  // Stream for captured frames
+  Stream<Uint8List> get frameStream => _frameController.stream;
 
   void setESP32IP(String ip) {
     _esp32IP = ip;
@@ -82,8 +92,6 @@ class ESP32ClientService {
       if (response.statusCode == 200) {
         await for (var chunk in response.stream) {
           if (!_isStreaming) break;
-
-          // Process MJPEG stream - look for JPEG boundaries
           _processStreamChunk(chunk);
         }
       }
@@ -109,7 +117,14 @@ class ESP32ClientService {
 
       // Extract complete JPEG image
       List<int> imageData = _buffer.sublist(startIndex, endIndex + 2);
-      _streamController?.add(Uint8List.fromList(imageData));
+      Uint8List frameData = Uint8List.fromList(imageData);
+
+      // Store the last frame for capture functionality
+      _lastFrame = frameData;
+
+      // Emit to both streams
+      _streamController?.add(frameData);
+      _frameController.add(frameData);
 
       // Remove processed data from buffer
       _buffer = _buffer.sublist(endIndex + 2);
@@ -138,10 +153,22 @@ class ESP32ClientService {
     _httpClient?.close();
     _httpClient = null;
     _buffer.clear();
+    _lastFrame = null;
   }
 
-  // Capture current frame (this would be called when capture button is pressed)
-  Future<Uint8List?> captureImage() async {
+  // NEW: Capture current frame from stream (this is what you want!)
+  Uint8List? captureCurrentFrame() {
+    if (!_isStreaming || _lastFrame == null) {
+      print('No active stream or no frame available');
+      return null;
+    }
+
+    // Return a copy of the last frame
+    return Uint8List.fromList(_lastFrame!);
+  }
+
+  // OPTIONAL: Keep the old capture method for fallback
+  Future<Uint8List?> captureImageFromESP32() async {
     try {
       final captureUrl = 'http://$_esp32IP:$_controlPort$_captureEndpoint';
       final response = await http.get(Uri.parse(captureUrl));
@@ -150,7 +177,7 @@ class ESP32ClientService {
         return response.bodyBytes;
       }
     } catch (e) {
-      print('Capture error: $e');
+      print('ESP32 capture error: $e');
     }
     return null;
   }
@@ -191,5 +218,6 @@ class ESP32ClientService {
 
   void dispose() {
     stopCameraStream();
+    _frameController.close();
   }
 }

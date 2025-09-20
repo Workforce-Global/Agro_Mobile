@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:agro_sav/services/esp32_client_service.dart';
+import 'package:agro_sav/services/udp_client_service.dart';
 import 'package:agro_sav/services/crop_analysis_service.dart';
 import 'package:agro_sav/services/firestore_service.dart';
 import './widgets/camera_overlay_widgets.dart';
@@ -13,14 +14,13 @@ import './widgets/camera_stream_widget.dart';
 import './widgets/settings_dialog.dart';
 
 class CameraStreamScreen extends StatefulWidget {
-  const CameraStreamScreen({super.key});
-
   @override
   _CameraStreamScreenState createState() => _CameraStreamScreenState();
 }
 
 class _CameraStreamScreenState extends State<CameraStreamScreen> {
   final ESP32ClientService _esp32Service = ESP32ClientService();
+  final UDPClientService _udpService = UDPClientService();
   final CropAnalysisService _analysisService = CropAnalysisService();
   final FirestoreService _firestoreService = FirestoreService();
 
@@ -32,31 +32,31 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
 
   String _esp32IP = ESP32ClientService.defaultIP;
   int _streamPort = ESP32ClientService.defaultStreamPort;
-  int _controlPort = ESP32ClientService.defaultControlPort;
+  int _udpPort = UDPClientService.defaultUDPPort;
   String _streamEndpoint = ESP32ClientService.defaultStreamEndpoint;
-  String _captureEndpoint = ESP32ClientService.defaultCaptureEndpoint;
-  String _moveEndpoint = ESP32ClientService.defaultMoveEndpoint;
-  String _positionEndpoint = ESP32ClientService.defaultPositionEndpoint;
 
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _streamPortController = TextEditingController();
-  final TextEditingController _controlPortController = TextEditingController();
+  final TextEditingController _udpPortController = TextEditingController();
   final TextEditingController _streamEndpointController = TextEditingController();
-  final TextEditingController _captureEndpointController = TextEditingController();
-  final TextEditingController _moveEndpointController = TextEditingController();
-  final TextEditingController _positionEndpointController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _initializeControllers();
     _requestPermissions();
+    _initializeUDP();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+  }
+
+  // Initialize UDP connection
+  Future<void> _initializeUDP() async {
+    await _udpService.initializeUDP();
   }
 
   Future<void> _requestPermissions() async {
@@ -67,22 +67,20 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   void _initializeControllers() {
     _ipController.text = _esp32IP;
     _streamPortController.text = _streamPort.toString();
-    _controlPortController.text = _controlPort.toString();
+    _udpPortController.text = _udpPort.toString();
     _streamEndpointController.text = _streamEndpoint;
-    _captureEndpointController.text = _captureEndpoint;
-    _moveEndpointController.text = _moveEndpoint;
-    _positionEndpointController.text = _positionEndpoint;
   }
 
   @override
   void dispose() {
     _esp32Service.dispose();
+    _udpService.dispose();
     super.dispose();
   }
 
   void _startStream() {
     if (!_isStreaming) {
-      _updateESP32Settings();
+      _updateSettings();
       setState(() {
         _cameraStream = _esp32Service.startCameraStream();
         _isStreaming = true;
@@ -90,14 +88,19 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     }
   }
 
-  void _updateESP32Settings() {
+  void _updateSettings() {
+    // Update ESP32 settings
     _esp32Service.setESP32IP(_esp32IP);
     _esp32Service.setStreamPort(_streamPort);
-    _esp32Service.setControlPort(_controlPort);
     _esp32Service.setStreamEndpoint(_streamEndpoint);
-    _esp32Service.setCaptureEndpoint(_captureEndpoint);
-    _esp32Service.setMoveEndpoint(_moveEndpoint);
-    _esp32Service.setPositionEndpoint(_positionEndpoint);
+
+    // Update UDP settings
+    _udpService.setESP32IP(_esp32IP);
+    _udpService.setUDPPort(_udpPort);
+
+    // Reinitialize UDP with new settings
+    _udpService.dispose();
+    _initializeUDP();
   }
 
   void _stopStream() {
@@ -107,6 +110,28 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
         _cameraStream = null;
         _isStreaming = false;
       });
+    }
+  }
+
+  // Handle direction button presses
+  Future<void> _onDirectionPressed(String direction) async {
+    print('Direction pressed: $direction');
+
+    // Send command via UDP (primary method)
+    bool udpSuccess = await _udpService.sendDirectionCommand(direction);
+
+    if (!udpSuccess) {
+      print('UDP command failed for direction: $direction');
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send $direction command'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } else {
+      print('UDP command sent successfully: $direction');
     }
   }
 
@@ -189,21 +214,18 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     );
   }
 
-  // NEW: Save image to gallery (visible to phone's gallery app)
+  // Save image to gallery (visible to phone's gallery app)
   Future<void> _saveImageToGallery(Uint8List imageData) async {
     try {
-      // For Android 10+ (API 29+), save to Pictures directory
       String? externalStoragePath;
 
       if (Platform.isAndroid) {
-        // Try to get the Pictures directory
         final directory = Directory('/storage/emulated/0/Pictures/AgroSav');
         if (!await directory.exists()) {
           await directory.create(recursive: true);
         }
         externalStoragePath = directory.path;
       } else if (Platform.isIOS) {
-        // For iOS, save to documents directory
         final directory = await getApplicationDocumentsDirectory();
         externalStoragePath = directory.path;
       }
@@ -218,7 +240,6 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
       }
     } catch (e) {
       print('Error saving image to gallery: $e');
-      // Fallback to app documents directory
       await _saveImage(imageData);
     }
   }
@@ -264,21 +285,14 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     );
   }
 
-  void _onJoystickMove(double position) {
-    _esp32Service.setArmPosition(position);
-  }
-
   void _showSettingsDialog() {
     showDialog(
       context: context,
       builder: (context) => ESP32SettingsDialog(
         ipController: _ipController,
         streamPortController: _streamPortController,
-        controlPortController: _controlPortController,
+        udpPortController: _udpPortController,
         streamEndpointController: _streamEndpointController,
-        captureEndpointController: _captureEndpointController,
-        moveEndpointController: _moveEndpointController,
-        positionEndpointController: _positionEndpointController,
         onSave: _saveSettings,
       ),
     );
@@ -288,19 +302,10 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
     setState(() {
       _esp32IP = _ipController.text.trim();
       _streamPort = int.tryParse(_streamPortController.text) ?? ESP32ClientService.defaultStreamPort;
-      _controlPort = int.tryParse(_controlPortController.text) ?? ESP32ClientService.defaultControlPort;
+      _udpPort = int.tryParse(_udpPortController.text) ?? UDPClientService.defaultUDPPort;
       _streamEndpoint = _streamEndpointController.text.trim().isEmpty
           ? ESP32ClientService.defaultStreamEndpoint
           : _streamEndpointController.text.trim();
-      _captureEndpoint = _captureEndpointController.text.trim().isEmpty
-          ? ESP32ClientService.defaultCaptureEndpoint
-          : _captureEndpointController.text.trim();
-      _moveEndpoint = _moveEndpointController.text.trim().isEmpty
-          ? ESP32ClientService.defaultMoveEndpoint
-          : _moveEndpointController.text.trim();
-      _positionEndpoint = _positionEndpointController.text.trim().isEmpty
-          ? ESP32ClientService.defaultPositionEndpoint
-          : _positionEndpointController.text.trim();
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -355,13 +360,13 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
           ),
         ),
 
-        // Compact arm control overlay (directly above shutter button)
+        // Compact direction control overlay (directly above shutter button)
         Positioned(
-          bottom: 120, // Small space above shutter button
+          bottom: 120,
           left: 0,
           right: 0,
           child: CompactArmControlOverlay(
-            onMove: _onJoystickMove,
+            onDirectionPressed: _onDirectionPressed,
           ),
         ),
 
@@ -425,13 +430,13 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
           ),
         ),
 
-        // Full-width arm control overlay (bottom center)
+        // Direction control overlay (bottom center)
         Positioned(
           bottom: MediaQuery.of(context).padding.bottom + 20,
           left: 0,
           right: 0,
           child: FullWidthArmControlOverlay(
-            onMove: _onJoystickMove,
+            onDirectionPressed: _onDirectionPressed,
           ),
         ),
       ],

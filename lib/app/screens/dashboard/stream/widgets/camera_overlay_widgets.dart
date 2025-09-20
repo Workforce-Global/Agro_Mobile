@@ -1,7 +1,8 @@
 // widgets/camera_overlay_widgets.dart
 import 'package:flutter/material.dart';
-import './joystick_widget.dart';
+import 'directional_control_widget.dart';
 
+// Top controls for portrait mode
 class TopControlsOverlay extends StatelessWidget {
   final bool isStreaming;
   final VoidCallback onSettingsPressed;
@@ -17,31 +18,171 @@ class TopControlsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Connection Status
-        ConnectionStatusWidget(isStreaming: isStreaming),
-        Spacer(),
-        // Top right controls
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            OverlayButton(
-              icon: Icons.settings,
-              onPressed: onSettingsPressed,
-            ),
-            SizedBox(width: 12),
-            OverlayButton(
-              icon: isStreaming ? Icons.stop_circle_outlined : Icons.play_circle_outlined,
-              onPressed: onStreamToggle,
-              color: isStreaming ? Colors.red : Colors.green,
-            ),
-          ],
+        _buildControlButton(
+          icon: Icons.settings,
+          onPressed: onSettingsPressed,
+          backgroundColor: Colors.black.withOpacity(0.6),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isStreaming ? Colors.green.withOpacity(0.8) : Colors.red.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isStreaming ? Icons.videocam : Icons.videocam_off,
+                color: Colors.white,
+                size: 16,
+              ),
+              SizedBox(width: 6),
+              Text(
+                isStreaming ? 'STREAMING' : 'OFFLINE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _buildControlButton(
+          icon: isStreaming ? Icons.stop : Icons.play_arrow,
+          onPressed: onStreamToggle,
+          backgroundColor: isStreaming ? Colors.red.withOpacity(0.8) : Colors.green.withOpacity(0.8),
         ),
       ],
     );
   }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: backgroundColor,
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white),
+        onPressed: onPressed,
+        iconSize: 24,
+      ),
+    );
+  }
 }
 
+// Top center controls for landscape mode
+class TopCenterControlsOverlay extends StatelessWidget {
+  final bool isStreaming;
+  final VoidCallback onSettingsPressed;
+  final VoidCallback onStreamToggle;
+
+  const TopCenterControlsOverlay({
+    super.key,
+    required this.isStreaming,
+    required this.onSettingsPressed,
+    required this.onStreamToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildControlButton(
+            icon: Icons.settings,
+            onPressed: onSettingsPressed,
+            backgroundColor: Colors.transparent,
+          ),
+          SizedBox(width: 20),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isStreaming ? Colors.green.withOpacity(0.8) : Colors.red.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isStreaming ? Icons.videocam : Icons.videocam_off,
+                  color: Colors.white,
+                  size: 14,
+                ),
+                SizedBox(width: 4),
+                Text(
+                  isStreaming ? 'LIVE' : 'OFF',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 20),
+          _buildControlButton(
+            icon: isStreaming ? Icons.stop : Icons.play_arrow,
+            onPressed: onStreamToggle,
+            backgroundColor: Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: backgroundColor,
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+}
+
+// Bottom controls for portrait mode
 class BottomControlsOverlay extends StatelessWidget {
   final bool isStreaming;
   final bool isCapturing;
@@ -63,34 +204,106 @@ class BottomControlsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Gallery/History Button
-        OverlayButton(
-          icon: Icons.photo_library_outlined,
+        _buildSideButton(
+          icon: Icons.photo_library,
           onPressed: onGalleryPressed,
-          size: 50,
+          enabled: true,
         ),
-        Spacer(),
-        // Shutter Button
-        ShutterButton(
-          isStreaming: isStreaming,
-          isCapturing: isCapturing,
-          isAnalyzing: isAnalyzing,
-          onCapture: onCapture,
-        ),
-        Spacer(),
-        // Switch/Other Function Button
-        OverlayButton(
-          icon: Icons.flip_camera_ios_outlined,
+        _buildShutterButton(),
+        _buildSideButton(
+          icon: Icons.flip_camera_ios,
           onPressed: onSwitchPressed,
-          size: 50,
+          enabled: isStreaming,
         ),
       ],
     );
   }
+
+  Widget _buildShutterButton() {
+    return GestureDetector(
+      onTap: (isStreaming && !isCapturing) ? onCapture : null,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: Colors.white, width: 4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Container(
+          margin: EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCapturing || isAnalyzing
+                ? Colors.orange
+                : (isStreaming ? Colors.red : Colors.grey),
+          ),
+          child: Center(
+            child: isCapturing || isAnalyzing
+                ? SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+                : Icon(
+              Icons.camera_alt,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSideButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required bool enabled,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onPressed : null,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: enabled ? Colors.white.withOpacity(0.9) : Colors.grey.withOpacity(0.5),
+          border: Border.all(
+            color: enabled ? Colors.white : Colors.grey.withOpacity(0.7),
+            width: 2,
+          ),
+          boxShadow: enabled ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ] : [],
+        ),
+        child: Icon(
+          icon,
+          color: enabled ? Colors.black : Colors.grey[600],
+          size: 24,
+        ),
+      ),
+    );
+  }
 }
 
-// NEW: Right side controls for landscape mode
+// Right side controls for landscape mode
 class RightSideControlsOverlay extends StatelessWidget {
   final bool isStreaming;
   final bool isCapturing;
@@ -112,123 +325,35 @@ class RightSideControlsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Gallery/History Button
-        OverlayButton(
-          icon: Icons.photo_library_outlined,
-          onPressed: onGalleryPressed,
-          size: 50,
-        ),
-        SizedBox(height: 20),
-        // Shutter Button
-        ShutterButton(
-          isStreaming: isStreaming,
-          isCapturing: isCapturing,
-          isAnalyzing: isAnalyzing,
-          onCapture: onCapture,
-        ),
-        SizedBox(height: 20),
-        // Switch/Other Function Button
-        OverlayButton(
-          icon: Icons.flip_camera_ios_outlined,
-          onPressed: onSwitchPressed,
-          size: 50,
-        ),
-      ],
-    );
-  }
-}
-
-// NEW: Top center controls for landscape mode
-class TopCenterControlsOverlay extends StatelessWidget {
-  final bool isStreaming;
-  final VoidCallback onSettingsPressed;
-  final VoidCallback onStreamToggle;
-
-  const TopCenterControlsOverlay({
-    super.key,
-    required this.isStreaming,
-    required this.onSettingsPressed,
-    required this.onStreamToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ConnectionStatusWidget(isStreaming: isStreaming),
-        SizedBox(width: 20),
-        OverlayButton(
-          icon: Icons.settings,
-          onPressed: onSettingsPressed,
+        _buildSideButton(
+          icon: Icons.photo_library,
+          onPressed: onGalleryPressed,
+          enabled: true,
         ),
-        SizedBox(width: 12),
-        OverlayButton(
-          icon: isStreaming ? Icons.stop_circle_outlined : Icons.play_circle_outlined,
-          onPressed: onStreamToggle,
-          color: isStreaming ? Colors.red : Colors.green,
+        SizedBox(height: 20),
+        _buildShutterButton(),
+        SizedBox(height: 20),
+        _buildSideButton(
+          icon: Icons.flip_camera_ios,
+          onPressed: onSwitchPressed,
+          enabled: isStreaming,
         ),
       ],
     );
   }
-}
 
-// NEW: Compact arm control for portrait mode (above shutter button)
-class CompactArmControlOverlay extends StatelessWidget {
-  final Function(double) onMove;
-
-  const CompactArmControlOverlay({
-    super.key,
-    required this.onMove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      margin: EdgeInsets.symmetric(horizontal: 40),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white24, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: JoystickWidget(
-        onMove: onMove,
-        size: 80,
-        isCompact: true, // Use the new compact style
-      ),
-    );
-  }
-}
-
-// UPDATED: Full-width arm control for landscape mode (bottom)
-class FullWidthArmControlOverlay extends StatelessWidget {
-  final Function(double) onMove;
-
-  const FullWidthArmControlOverlay({
-    super.key,
-    required this.onMove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
+  Widget _buildShutterButton() {
+    return GestureDetector(
+      onTap: (isStreaming && !isCapturing) ? onCapture : null,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.5, // 50% of screen width instead of full width
-        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+        width: 70,
+        height: 70,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white24, width: 1),
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: Colors.white, width: 3),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
@@ -237,192 +362,103 @@ class FullWidthArmControlOverlay extends StatelessWidget {
             ),
           ],
         ),
-        child: JoystickWidget(
-          onMove: onMove,
-          size: 100, // Slightly smaller size for the shorter bar
-          isCompact: true,
-        ),
-      ),
-    );
-  }
-}
-
-class ArmControlOverlay extends StatelessWidget {
-  final Function(double) onMove;
-  final double size;
-
-  const ArmControlOverlay({
-    super.key,
-    required this.onMove,
-    this.size = 100,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(size / 2 + 16),
-        border: Border.all(color: Colors.white24, width: 1),
-      ),
-      child: JoystickWidget(
-        onMove: onMove,
-        size: size,
-      ),
-    );
-  }
-}
-
-class ShutterButton extends StatelessWidget {
-  final bool isStreaming;
-  final bool isCapturing;
-  final bool isAnalyzing;
-  final VoidCallback onCapture;
-
-  const ShutterButton({
-    super.key,
-    required this.isStreaming,
-    required this.isCapturing,
-    required this.isAnalyzing,
-    required this.onCapture,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isStreaming && !isCapturing && !isAnalyzing ? onCapture : null,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 4,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 10,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
         child: Container(
-          margin: EdgeInsets.all(6),
+          margin: EdgeInsets.all(5),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isStreaming && !isCapturing && !isAnalyzing
-                ? Colors.white
-                : Colors.grey.withOpacity(0.5),
+            color: isCapturing || isAnalyzing
+                ? Colors.orange
+                : (isStreaming ? Colors.red : Colors.grey),
           ),
-          child: isCapturing
-              ? Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+          child: Center(
+            child: isCapturing || isAnalyzing
+                ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+                : Icon(
+              Icons.camera_alt,
+              color: Colors.white,
+              size: 28,
             ),
-          )
-              : null,
+          ),
         ),
       ),
     );
   }
-}
 
-class OverlayButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color? color;
-  final double size;
-
-  const OverlayButton({
-    super.key,
-    required this.icon,
-    required this.onPressed,
-    this.color,
-    this.size = 44,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white24, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+  Widget _buildSideButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required bool enabled,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onPressed : null,
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: enabled ? Colors.white.withOpacity(0.9) : Colors.grey.withOpacity(0.5),
+          border: Border.all(
+            color: enabled ? Colors.white : Colors.grey.withOpacity(0.7),
+            width: 2,
           ),
-        ],
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(
+          boxShadow: enabled ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ] : [],
+        ),
+        child: Icon(
           icon,
-          color: color ?? Colors.white,
-          size: size * 0.45,
+          color: enabled ? Colors.black : Colors.grey[600],
+          size: 20,
         ),
-        padding: EdgeInsets.zero,
       ),
     );
   }
 }
 
-class ConnectionStatusWidget extends StatelessWidget {
-  final bool isStreaming;
+// Compact arm control for portrait mode (above shutter button)
+class CompactArmControlOverlay extends StatelessWidget {
+  final Function(String) onDirectionPressed;
 
-  const ConnectionStatusWidget({
+  const CompactArmControlOverlay({
     super.key,
-    required this.isStreaming,
+    required this.onDirectionPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isStreaming ? Colors.green : Colors.red,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+    return Center(
+      child: CompactDirectionControlOverlay(
+        onDirectionPressed: onDirectionPressed,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: isStreaming ? Colors.green : Colors.red,
-              shape: BoxShape.circle,
-            ),
-          ),
-          SizedBox(width: 6),
-          Text(
-            isStreaming ? 'LIVE' : 'OFFLINE',
-            style: TextStyle(
-              color: isStreaming ? Colors.green : Colors.red,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-            ),
-          ),
-        ],
+    );
+  }
+}
+
+// Full width arm control for landscape mode (bottom)
+class FullWidthArmControlOverlay extends StatelessWidget {
+  final Function(String) onDirectionPressed;
+
+  const FullWidthArmControlOverlay({
+    super.key,
+    required this.onDirectionPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: LandscapeDirectionControlOverlay(
+        onDirectionPressed: onDirectionPressed,
       ),
     );
   }

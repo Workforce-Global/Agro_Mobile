@@ -7,10 +7,10 @@ class ImageUploadSection extends StatelessWidget {
   final VoidCallback onImageSelected;
 
   const ImageUploadSection({
-    Key? key,
+    super.key,
     required this.selectedImage,
     required this.onImageSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

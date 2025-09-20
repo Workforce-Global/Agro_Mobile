@@ -7,11 +7,11 @@ class AnalyzeButton extends StatelessWidget {
   final bool isEnabled;
 
   const AnalyzeButton({
-    Key? key,
+    super.key,
     required this.isAnalyzing,
     required this.onAnalyze,
     required this.isEnabled,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

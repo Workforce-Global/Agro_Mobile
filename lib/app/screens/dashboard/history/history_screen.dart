@@ -109,7 +109,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildStatisticsCard() {
     final totalAnalyses = _statistics['total_analyses'] ?? 0;
-    final averageConfidence = (_statistics['average_confidence'] ?? 0.0) * 100;
+    final averageConfidence = (_statistics['average_confidence'] ?? 0.0);
     final highConfidencePercentage = _statistics['high_confidence_percentage'] ?? 0.0;
     final detectionCounts = _statistics['detection_counts'] as Map<String, dynamic>? ?? {};
 
@@ -231,7 +231,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildHistoryCard(Map<String, dynamic> result) {
     final label = result['label'] ?? 'Unknown';
-    final confidence = ((result['confidence'] ?? 0.0) * 100);
+    final confidence = (result['confidence'] ?? 0.0);
     final modelUsed = result['model_used'] ?? 'Unknown';
     final timestamp = result['timestamp']?.toDate() ?? DateTime.now();
     final docId = result['id'] ?? '';

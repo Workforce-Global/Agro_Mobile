@@ -7,10 +7,10 @@ class ModelSelectionSection extends StatelessWidget {
   final Function(String) onModelChanged;
 
   const ModelSelectionSection({
-    Key? key,
+    super.key,
     required this.selectedModel,
     required this.onModelChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

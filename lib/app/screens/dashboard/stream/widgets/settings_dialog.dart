@@ -2,26 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:agro_sav/services/esp32_client_service.dart';
 import 'package:agro_sav/services/crop_analysis_service.dart';
+import 'package:agro_sav/services/udp_client_service.dart';
 
 class ESP32SettingsDialog extends StatelessWidget {
   final TextEditingController ipController;
   final TextEditingController streamPortController;
-  final TextEditingController controlPortController;
+  final TextEditingController udpPortController;
   final TextEditingController streamEndpointController;
-  final TextEditingController captureEndpointController;
-  final TextEditingController moveEndpointController;
-  final TextEditingController positionEndpointController;
   final VoidCallback onSave;
 
   const ESP32SettingsDialog({
     super.key,
     required this.ipController,
     required this.streamPortController,
-    required this.controlPortController,
+    required this.udpPortController,
     required this.streamEndpointController,
-    required this.captureEndpointController,
-    required this.moveEndpointController,
-    required this.positionEndpointController,
     required this.onSave,
   });
 
@@ -31,7 +26,7 @@ class ESP32SettingsDialog extends StatelessWidget {
       insetPadding: EdgeInsets.all(16),
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.85,
+        height: MediaQuery.of(context).size.height * 0.7,
         child: Column(
           children: [
             _buildHeader(),
@@ -53,7 +48,7 @@ class ESP32SettingsDialog extends StatelessWidget {
                         Expanded(
                           child: _buildSettingsField(
                             controller: streamPortController,
-                            label: 'Stream Port',
+                            label: 'Camera Stream Port',
                             hint: '81',
                             icon: Icons.videocam,
                             keyboardType: TextInputType.number,
@@ -62,10 +57,10 @@ class ESP32SettingsDialog extends StatelessWidget {
                         SizedBox(width: 16),
                         Expanded(
                           child: _buildSettingsField(
-                            controller: controlPortController,
-                            label: 'Control Port',
-                            hint: '80',
-                            icon: Icons.settings_remote,
+                            controller: udpPortController,
+                            label: 'UDP Control Port',
+                            hint: '8888',
+                            icon: Icons.gamepad,
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -74,30 +69,31 @@ class ESP32SettingsDialog extends StatelessWidget {
                     SizedBox(height: 16),
                     _buildSettingsField(
                       controller: streamEndpointController,
-                      label: 'Stream Endpoint',
+                      label: 'Camera Stream Endpoint',
                       hint: '/stream',
                       icon: Icons.router,
                     ),
-                    SizedBox(height: 16),
-                    _buildSettingsField(
-                      controller: captureEndpointController,
-                      label: 'Capture Endpoint',
-                      hint: '/capture',
-                      icon: Icons.camera_alt,
+                    SizedBox(height: 20),
+                    // Info cards about the system
+                    _buildInfoCard(
+                      icon: Icons.info_outline,
+                      color: Colors.blue,
+                      title: 'Camera Stream',
+                      description: 'HTTP stream for video feed from ESP32 camera module.',
                     ),
-                    SizedBox(height: 16),
-                    _buildSettingsField(
-                      controller: moveEndpointController,
-                      label: 'Move Endpoint',
-                      hint: '/move',
-                      icon: Icons.open_with,
+                    SizedBox(height: 12),
+                    _buildInfoCard(
+                      icon: Icons.gamepad,
+                      color: Colors.green,
+                      title: 'Movement Control',
+                      description: 'UDP commands for real-time robotic arm control with minimal latency.',
                     ),
-                    SizedBox(height: 16),
-                    _buildSettingsField(
-                      controller: positionEndpointController,
-                      label: 'Position Endpoint',
-                      hint: '/position',
-                      icon: Icons.my_location,
+                    SizedBox(height: 12),
+                    _buildInfoCard(
+                      icon: Icons.security,
+                      color: Colors.orange,
+                      title: 'Network Requirements',
+                      description: 'Ensure ESP32 and phone are on the same WiFi network for proper communication.',
                     ),
                   ],
                 ),
@@ -190,6 +186,62 @@ class ESP32SettingsDialog extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       keyboardType: keyboardType ?? TextInputType.text,
+    );
+  }
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: _getDarkerColor(color, 0.8),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: _getDarkerColor(color, 0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to create darker colors
+  Color _getDarkerColor(Color color, double factor) {
+    return Color.fromRGBO(
+      (color.red * factor).round(),
+      (color.green * factor).round(),
+      (color.blue * factor).round(),
+      color.opacity,
     );
   }
 }

@@ -1,4 +1,6 @@
 // dashboard/crop_analysis/widgets/analysis_results_dialog.dart
+// ignore_for_file: use_super_parameters
+
 import 'package:flutter/material.dart';
 import 'result_item.dart';
 
